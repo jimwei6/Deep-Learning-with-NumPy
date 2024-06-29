@@ -8,6 +8,9 @@ class Layer:
     self.params = None
     pass
 
+  def __call__(self, X):
+    self.forward(X)
+
   def forward(self, X):
     return NotImplementedError
 
@@ -35,6 +38,24 @@ class Linear(Layer):
     self.grads[1] += self.db
     return np.dot(grad, self.W.T)
     
+class Dropout(Layer):
+  def __init__(self, drop_p=0.01):
+    super().__init__()
+    self.retain_p = 1 - drop_p
+
+  def forward(self, X, training=True):
+    if training:
+      self._mask = (np.random.rand(*X.shape) < self.retain_p) / self.retain_p
+      out = X * self._mask
+    else:
+      out = X
+    return out
   
+  def backward(self, dx_out, training=True):
+    if training:
+      out = dx_out * self._mask
+    else:
+      out = dx_out
+    return out
 
 
